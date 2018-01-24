@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Basic Mapbox GL DVRPC Boundary Map</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.43.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.43.0/mapbox-gl.css' rel='stylesheet' />
+
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<script>
+mapboxgl.accessToken = 'ADD A TOKEN';
+
+var stylesheet = {
+  "version": 8,
+  "sources": {
+    "counties": {
+      "type": "vector",
+      "url": "http://a.michaelruane.com/dvrpc_boundaries.json"
+    }
+  },
+  "layers": [
+    {"id": "county-fill",
+      "type": "fill",
+      "source": "counties",
+      "source-layer": "county",
+      "layout": {},
+      "paint": {
+          "fill-color": "#778899",
+          "fill-opacity": 1
+      },
+      "filter": [
+                "==",
+                "DVRPC_REG",
+                "Yes"
+            ],
+    },
+    {
+        "id": "municipality-outline",
+        "type": "line",
+        "source": "counties",
+        "source-layer": "municipalities",
+        "paint": {
+            'line-width': 0.5,
+            'line-color': '#efefef'
+        }
+    },
+    {
+        "id": "county-outline",
+        "type": "line",
+        "source": "counties",
+        "source-layer": "county",
+        "paint": {
+            'line-width': 2.5,
+            'line-color': '#fff'
+        },
+        "filter": [
+                "==",
+                "DVRPC_REG",
+                "Yes"
+            ]
+    }
+  ]
+} 
+
+// lets build the map
+var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: stylesheet,
+    center: [-75.2273, 40.071],
+    zoom: 8.82, // starting zoom
+    hash: 'true'
+});
+
+//make sure it all fits
+map.fitBounds([[
+    -76.09405517578125, 39.49211914385648   
+], [
+    -74.32525634765625,40.614734298694216
+]]);
+
+</script>
+
+</body>
+</html>
