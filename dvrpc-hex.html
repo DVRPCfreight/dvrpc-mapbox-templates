@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Basic Mapbox GL DVRPC Boundary Map</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.43.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.43.0/mapbox-gl.css' rel='stylesheet' />
+
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:50px; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+<div id='buttons' style="z-index:2000">
+  <button id='establishment' class='button'>Establishment</button>
+  <button id='employment' class='button'>Employment</button>
+  <button id='industrial' class='button'>Industrial</button>
+  <button id='landuse' class='button'>Landuse</button>
+  <button id='facility' class='button'>Facility</button>
+  
+</div>
+<div id='map'></div>
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+<script type='text/javascript' src='config.js'></script>
+<script type='text/javascript' src='pbf-dev.js'></script>
+<script type='text/javascript' src='geobuf.js'></script>
+<script>
+mapboxgl.accessToken = config.MAPBOX_TOKEN;
+
+var stylesheet = {
+  "version": 8,
+  "sources": {
+    "counties": {
+      "type": "vector",
+      "url": "http://a.michaelruane.com/dvrpc_boundaries.json"
+    }
+  },
+  "layers": [
+    {"id": "county-fill",
+      "type": "fill",
+      "source": "counties",
+      "source-layer": "county",
+      "layout": {},
+      "paint": {
+          "fill-color": "#c9c9c9",
+          "fill-opacity": 1
+      },
+      "filter": [
+                "==",
+                "DVRPC_REG",
+                "Yes"
+            ],
+    },
+    {
+        "id": "municipality-outline",
+        "type": "line",
+        "source": "counties",
+        "source-layer": "municipalities",
+        "paint": {
+            'line-width': 0.5,
+            'line-color': '#fff'
+        }
+    },
+    {
+        "id": "county-outline",
+        "type": "line",
+        "source": "counties",
+        "source-layer": "county",
+        "paint": {
+            'line-width': 2.5,
+            'line-color': '#fff'
+        },
+        "filter": [
+                "==",
+                "DVRPC_REG",
+                "Yes"
+            ]
+    }
+  ]
+} 
+
+// lets build the map
+var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: stylesheet,
+    center: [-75.2273, 40.071],
+    zoom: 8.82, // starting zoom
+    hash: 'true'
+});
+
+//make sure it all fits
+map.fitBounds([[
+    -76.09405517578125, 39.49211914385648   
+], [
+    -74.32525634765625,40.614734298694216
+]]);
+
+
+
+//request to award data for 2017
+var xhr = new XMLHttpRequest();
+xhr.open('GET', 'data/dvrpc_hex_score.geojson', true);
+// xhr.responseType = 'arraybuffer';
+xhr.onload = function() {
+    if (xhr.status === 200) {
+        // var data = geobuf.decode(new Pbf(xhr.response));
+        var data = xhr.responseText;
+
+        map.on('load', function(){
+            // Add a new source from our GeoJSON data 
+            map.addSource("hex", {
+                type: "geojson",
+                data: JSON.parse(data)
+            });
+
+            // Create layer from source
+            map.addLayer({
+                "id": "employment-fill",
+                "type": "fill",
+                "source": "hex",
+                'paint': {
+                    // "fill-color": "#fff",
+                    "fill-opacity": 0.7,
+                    'fill-color': {
+                      property: 'fq_results_score_emp',
+                      stops: [
+                        [1, '#eff3ff'],
+                        [2, '#bdd7e7'],
+                        [3, '#6baed6'],
+                        [4, '#3182bd'],
+                        [5, '#08519c']
+                      ]
+                    },
+                },
+                'filter': 
+                          [
+                    ">",
+                    "fq_results_score_emp",
+                    0
+                ],
+            });
+
+            // Create layer from source
+            map.addLayer({
+                "id": "establishment-fill",
+                "type": "fill",
+                "source": "hex",
+                'paint': {
+                    // "fill-color": "#fff",
+                    "fill-opacity": 0,
+                    'fill-color': {
+                      property: 'fq_results_score_est',
+                      stops: [
+                        [1, '#ffffcc'],
+                        [2, '#a1dab4'],
+                        [3, '#41b6c4'],
+                        [4, '#2c7fb8'],
+                        [5, '#253494']
+                      ]
+                    },
+                },
+                'filter': 
+                          [
+                    ">",
+                    "fq_results_score_est",
+                    0
+                ],
+            });
+
+            // Create layer from source
+            map.addLayer({
+                "id": "facility-fill",
+                "type": "fill",
+                "source": "hex",
+                'paint': {
+                    // "fill-color": "#fff",
+                    "fill-opacity": 0,
+                    'fill-color': {
+                      property: 'fq_results_score_fac',
+                      stops: [
+                        [1, '#ffffcc'],
+                        [2, '#a1dab4'],
+                        [3, '#41b6c4'],
+                        [4, '#2c7fb8'],
+                        [5, '#253494']
+                      ]
+                    },
+                },
+                'filter': 
+                          [
+                    ">",
+                    "fq_results_score_fac",
+                    0
+                ],
+            });
+
+            // Create layer from source
+            map.addLayer({
+                "id": "landuse-fill",
+                "type": "fill",
+                "source": "hex",
+                'paint': {
+                    // "fill-color": "#fff",
+                    "fill-opacity": 0,
+                    'fill-color': {
+                      property: 'fq_results_score_lu',
+                      stops: [
+                        [1, '#ffffcc'],
+                        [2, '#a1dab4'],
+                        [3, '#41b6c4'],
+                        [4, '#2c7fb8'],
+                        [5, '#253494']
+                      ]
+                    },
+                },
+                'filter': 
+                          [
+                    ">",
+                    "fq_results_score_lu",
+                    0
+                ],
+            });
+
+            // Create layer from source
+            map.addLayer({
+                "id": "industrial-fill",
+                "type": "fill",
+                "source": "hex",
+                'paint': {
+                    // "fill-color": "#fff",
+                    "fill-opacity": 0,
+                    'fill-color': {
+                      property: 'fq_results_score_ind',
+                      stops: [
+                        [1, '#ffffcc'],
+                        [2, '#a1dab4'],
+                        [3, '#41b6c4'],
+                        [4, '#2c7fb8'],
+                        [5, '#253494']
+                      ]
+                    },
+                },
+                'filter': 
+                          [
+                    ">",
+                    "fq_results_score_ind",
+                    0
+                ],
+            });
+
+        });
+    }
+    else {
+        alert('Request failed.  Returned status of ' + xhr.status);
+    }
+};
+xhr.send();
+const states = ['employment','establishment','industrial', 'landuse', 'facility'];
+
+$('.button').on('click', function(){
+  // console.log('click')
+  var viz = this.id;
+ 
+  for (i = 0; i < states.length; i++) {
+    
+    if(states[i] == viz){
+      map.setPaintProperty(viz+'-fill', 'fill-opacity', 0.7);
+    }else{
+      
+      map.setPaintProperty(states[i]+'-fill', 'fill-opacity', 0.0);
+    }
+  }
+})
+   
+</script>
+
+</body>
+</html>
