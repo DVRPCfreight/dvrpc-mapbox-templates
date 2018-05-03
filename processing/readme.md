@@ -10,6 +10,7 @@ shp to geojson- `ogr2ogr -f "GeoJSON" -t_srs "EPSG:4326" -lco "COORDINATE_PRECIS
 generate MbTiles - `tippecanoe -o municipal.mbtiles -l municipalities -d -f -pf -pt municipal.geojson`
 
 _metadata_
+
 Field | Value |  
 --- | ---
 name | municipal name
@@ -26,6 +27,7 @@ __layer__: county
 generate MbTiles - `tippecanoe -o county.mbtiles -l county -d -f -pf -pt county.geojson`
 
 _metadata_
+
 Field | Value |  
 --- | ---
 name | county name
